@@ -4,34 +4,49 @@ import FilterContext from '../context/FilterContext';
 function Table() {
   const { fetchStarWarsApi, planets,
     isFetching, filterByName, filterByNumericValues,
-    uploadFilter } = useContext(FilterContext);
+    uploadFilter, newFilter, updateNumericalFilter,
+    planetsDefaut, restoreFilter } = useContext(FilterContext);
 
   useEffect(() => {
     fetchStarWarsApi();
-    return () => {
-      console.log(planets);
-    };
   }, []);
+
+  function filterPlanets(planetsFilter) {
+    const index = filterByNumericValues.length - 1;
+    const { column, value, comparison } = filterByNumericValues[index];
+    switch (comparison) {
+    case 'maior que':
+      uploadFilter(planetsFilter.filter((item) => item[column] > Number(value)));
+      break;
+    case 'menor que':
+      uploadFilter(planetsFilter.filter((item) => item[column] < Number(value)));
+      break;
+    case 'igual a':
+      uploadFilter(planetsFilter.filter((item) => item[column] === value));
+      break;
+    default:
+      console.log('falhoooou');
+    }
+  }
+
+  function removeFilter({ target }) {
+    const index = target.name;
+    const filterReturned = target.id;
+    restoreFilter(filterReturned);
+    filterByNumericValues.splice(index, 1);
+    console.log(filterByNumericValues);
+    updateNumericalFilter(filterByNumericValues);
+    console.log(filterByNumericValues);
+    if (filterByNumericValues.length !== 0) {
+      filterPlanets(planetsDefaut.planetsDefaut);
+    } if (filterByNumericValues.length === 0) {
+      fetchStarWarsApi();
+    }
+  }
 
   useEffect(() => {
     if (filterByNumericValues.length !== 0) {
-      const { column, value, comparison } = filterByNumericValues[0];
-      console.log(column);
-      console.log(value);
-      console.log(comparison);
-      switch (comparison) {
-      case 'maior que':
-        uploadFilter(planets.planets.filter((item) => item[column] > Number(value)));
-        break;
-      case 'menor que':
-        uploadFilter(planets.planets.filter((item) => item[column] < Number(value)));
-        break;
-      case 'igual a':
-        uploadFilter(planets.planets.filter((item) => item[column] === value));
-        break;
-      default:
-        console.log('falhoooou');
-      }
+      filterPlanets(planets.planets);
     }
   }, [filterByNumericValues]);
 
@@ -40,7 +55,25 @@ function Table() {
       {isFetching
         && (
           <table>
-            {console.log(planets)}
+            {newFilter
+              && (
+                filterByNumericValues.map((filter, index) => (
+                  <div key={ index } data-testid="filter">
+                    <p name={ index }>
+                      {`${filter.column}, ${filter.comparison}, ${filter.value}`}
+                    </p>
+                    <button
+                      name={ index }
+                      id={ filter.column }
+                      type="button"
+                      onClick={ removeFilter }
+                    >
+                      Excluir
+
+                    </button>
+                  </div>
+                ))
+              )}
             <tr>
               <th>Name</th>
               <th>Rotation Period</th>

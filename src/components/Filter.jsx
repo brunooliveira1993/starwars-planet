@@ -1,16 +1,22 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import FilterContext from '../context/FilterContext';
 
 function Filter() {
   const [filterName, setFilterName] = useState({
     name: '',
   });
-  const [filterNumericValues, setfilterByNumericValues] = useState({
+  const [refreshFilter, setRefreshFilter] = useState(true);
+  const [filterNumericValues, setfilterNumericValues] = useState({
     column: 'population',
     comparison: 'maior que',
     value: '0',
   });
-  const { createFilter, createNumericalFilter } = useContext(FilterContext);
+  const { createFilter, createNumericalFilter, arr,
+    chageOrder, order } = useContext(FilterContext);
+  const [createOrder, setCreateOrder] = useState({
+    column: 'population',
+    sort: 'ASC',
+  });
 
   const onImputChange = (event) => {
     setFilterName({
@@ -19,12 +25,33 @@ function Filter() {
     createFilter(event.target.value);
   };
 
+  useEffect(() => {
+    setfilterNumericValues({
+      column: arr[0],
+      comparison: 'maior que',
+      value: '0',
+    });
+  }, [arr]);
+
+  useEffect(() => {
+    chageOrder(createOrder);
+  }, [createOrder]);
+
   const sendFilter = () => {
+    setRefreshFilter(false);
     createNumericalFilter(filterNumericValues);
+    setRefreshFilter(true);
   };
 
   const handleChange = ({ target }) => {
-    setfilterByNumericValues((prevState) => ({
+    setfilterNumericValues((prevState) => ({
+      ...prevState,
+      [target.name]: target.value,
+    }));
+  };
+
+  const changeSort = ({ target }) => {
+    setCreateOrder((prevState) => ({
       ...prevState,
       [target.name]: target.value,
     }));
@@ -40,18 +67,17 @@ function Filter() {
         value={ filterName.name }
       />
       <br />
-      <select
-        value={ filterNumericValues.column }
-        name="column"
-        data-testid="column-filter"
-        onChange={ handleChange }
-      >
-        <option value="population">population</option>
-        <option value="orbital_period">orbital_period</option>
-        <option value="diameter">diameter</option>
-        <option value="rotation_period">rotation_period</option>
-        <option value="surface_water">surface_water</option>
-      </select>
+      {refreshFilter
+        && (
+          <select
+            value={ filterNumericValues.column }
+            name="column"
+            data-testid="column-filter"
+            onChange={ handleChange }
+          >
+            {arr.map((option, i) => <option key={ i } value={ option }>{option}</option>)}
+          </select>
+        )}
       <select
         value={ filterNumericValues.comparison }
         name="comparison"
@@ -77,6 +103,46 @@ function Filter() {
         FILTRO
 
       </button>
+      <button
+        data-testid="button-remove-filters"
+        type="button"
+        onClick={ () => window.location.reload(false) }
+      >
+        REMOVER FILTROS
+
+      </button>
+      <select
+        value={ order.column }
+        name="column"
+        data-testid="column-sort"
+        onChange={ changeSort }
+      >
+        <option value="population">population</option>
+        <option value="orbital_period">orbital_period</option>
+        <option value="diameter">diameter</option>
+        <option value="rotation_period">rotation_period</option>
+        <option value="surface_water">surface_water</option>
+      </select>
+      <span>
+        <input
+          type="radio"
+          data-testid="column-sort-input-asc"
+          value="ASC"
+          name="sort"
+          onClick={ changeSort }
+        />
+        Ascendente
+      </span>
+      <span>
+        <input
+          type="radio"
+          data-testid="column-sort-input-desc"
+          value="DESC"
+          name="sort"
+          onClick={ changeSort }
+        />
+        Descendente
+      </span>
     </div>
 
   );

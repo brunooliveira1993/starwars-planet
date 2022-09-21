@@ -5,16 +5,34 @@ import getStarWarsApi from '../services/getStarWarsApi';
 
 function FilterProvider({ children }) {
   const [planets, setPlanets] = useState([]);
+  const [planetsDefaut, setPlanetsDefaut] = useState([]);
+  const [newFilter, setnewFilter] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [filterByName, setFilterByName] = useState('');
   const [filterByNumericValues, setfilterByNumericValues] = useState([]);
+  const [arr, setArr] = useState(['population', 'orbital_period', 'diameter',
+    'rotation_period', 'surface_water']);
+  const [order, setOrder] = useState({
+    column: 'population',
+    sort: 'ASC',
+  });
 
   const fetchStarWarsApi = async () => {
     try {
       const response = await getStarWarsApi();
+      const SORT_NUMBER = -1;
+      const planetsReturn = response.results.sort((a, b) => {
+        if (Number(a.population) < Number(b.population)) {
+          return SORT_NUMBER;
+        }
+        return true;
+      });
       setFilterByName({ name: '' });
+      setPlanetsDefaut({
+        planetsDefaut: planetsReturn,
+      });
       setPlanets({
-        planets: response.results,
+        planets: planetsReturn,
       });
       setIsFetching(true);
     } catch (error) {
@@ -36,6 +54,15 @@ function FilterProvider({ children }) {
       ...prevState,
       numericalFilter,
     ]));
+    setArr((prevState) => [...prevState.filter((i) => i !== numericalFilter.column)]);
+  };
+
+  const restoreFilter = (returnedFilter) => {
+    setArr((prevState) => [returnedFilter, ...prevState]);
+  };
+
+  const updateNumericalFilter = (removeFilter) => {
+    setfilterByNumericValues([...removeFilter]);
   };
 
   const uploadFilter = (uploadPlanets) => {
@@ -44,9 +71,25 @@ function FilterProvider({ children }) {
       planets: uploadPlanets,
     });
     setIsFetching(true);
+    setnewFilter(true);
+  };
+
+  const chageOrder = (newOrder) => {
+    setOrder((prevState) => ({
+      ...prevState,
+      column: newOrder.column,
+      sort: newOrder.sort,
+    }));
   };
 
   const filterValue = {
+    chageOrder,
+    order,
+    restoreFilter,
+    arr,
+    planetsDefaut,
+    updateNumericalFilter,
+    newFilter,
     uploadFilter,
     createNumericalFilter,
     filterByNumericValues,
