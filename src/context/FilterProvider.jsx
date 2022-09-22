@@ -18,29 +18,25 @@ function FilterProvider({ children }) {
   });
 
   const fetchStarWarsApi = async () => {
-    try {
-      const response = await getStarWarsApi();
-      const SORT_NUMBER = -1;
-      const planetsReturn = response.results.sort((a, b) => {
-        if (Number(a.population) < Number(b.population)) {
-          return SORT_NUMBER;
-        }
-        return true;
-      });
-      setFilterByName({ name: '' });
-      setPlanetsDefaut({
-        planetsDefaut: planetsReturn,
-      });
-      setPlanets({
-        planets: planetsReturn,
-      });
-      setIsFetching(true);
-    } catch (error) {
-      setPlanets({
-        error,
-      });
-      setIsFetching(true);
-    }
+    const response = await getStarWarsApi();
+    const SORT_NUMBER = -2;
+    const unknow = response.results.filter((item) => item.population === 'unknown');
+    const noUnknow = response.results.filter((item) => item.population !== 'unknown');
+    const planetsSort = noUnknow.sort((a, b) => {
+      if (Number(a.population) < Number(b.population)) {
+        return SORT_NUMBER;
+      }
+      return true;
+    });
+    const planetsReturn = [...planetsSort, ...unknow];
+    setFilterByName({ name: '' });
+    setPlanetsDefaut({
+      planetsDefaut: planetsReturn,
+    });
+    setPlanets({
+      planets: planetsReturn,
+    });
+    setIsFetching(true);
   };
 
   const createFilter = (filterTask) => {
@@ -74,6 +70,14 @@ function FilterProvider({ children }) {
     setnewFilter(true);
   };
 
+  const sortFilter = (uploadPlanets) => {
+    setIsFetching(false);
+    setPlanets({
+      planets: uploadPlanets,
+    });
+    setIsFetching(true);
+  };
+
   const chageOrder = (newOrder) => {
     setOrder((prevState) => ({
       ...prevState,
@@ -83,6 +87,7 @@ function FilterProvider({ children }) {
   };
 
   const filterValue = {
+    sortFilter,
     chageOrder,
     order,
     restoreFilter,

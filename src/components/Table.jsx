@@ -5,7 +5,7 @@ function Table() {
   const { fetchStarWarsApi, planets,
     isFetching, filterByName, filterByNumericValues,
     uploadFilter, newFilter, updateNumericalFilter,
-    planetsDefaut, restoreFilter } = useContext(FilterContext);
+    planetsDefaut, restoreFilter, order, sortFilter } = useContext(FilterContext);
 
   useEffect(() => {
     fetchStarWarsApi();
@@ -25,7 +25,6 @@ function Table() {
       uploadFilter(planetsFilter.filter((item) => item[column] === value));
       break;
     default:
-      console.log('falhoooou');
     }
   }
 
@@ -34,9 +33,7 @@ function Table() {
     const filterReturned = target.id;
     restoreFilter(filterReturned);
     filterByNumericValues.splice(index, 1);
-    console.log(filterByNumericValues);
     updateNumericalFilter(filterByNumericValues);
-    console.log(filterByNumericValues);
     if (filterByNumericValues.length !== 0) {
       filterPlanets(planetsDefaut.planetsDefaut);
     } if (filterByNumericValues.length === 0) {
@@ -50,8 +47,50 @@ function Table() {
     }
   }, [filterByNumericValues]);
 
+  function orderPlanets(orderItem, sort) {
+    const SORT_NUMBER = -1;
+    const { column } = order;
+    if (sort === 'ASC') {
+      const planetsSort = orderItem.sort((a, b) => {
+        if (Number(a[column]) < Number(b[column])) {
+          return SORT_NUMBER;
+        }
+        return true;
+      });
+      return planetsSort;
+    } if (sort === 'DESC') {
+      const planetsSort = orderItem.sort((a, b) => {
+        if (Number(a[column]) > Number(b[column])) {
+          return SORT_NUMBER;
+        }
+        return true;
+      });
+      return planetsSort;
+    }
+  }
+
+  function orderTable() {
+    switch (order.sort) {
+    case 'ASC':
+      sortFilter(orderPlanets(planets.planets, 'ASC'));
+      break;
+    case 'DESC':
+      sortFilter(orderPlanets(planets.planets, 'DESC'));
+      break;
+    default:
+    }
+  }
+
   return (
     <div>
+      <button
+        data-testid="column-sort-button"
+        type="button"
+        onClick={ orderTable }
+      >
+        ORDENAR
+
+      </button>
       {isFetching
         && (
           <table>
@@ -94,7 +133,7 @@ function Table() {
               .map((item, index) => (
                 <tbody key={ index }>
                   <tr>
-                    <th>{item.name}</th>
+                    <th data-testid="planet-name">{item.name}</th>
                     <th>{item.rotation_period}</th>
                     <th>{item.orbital_period}</th>
                     <th>{item.diameter}</th>
